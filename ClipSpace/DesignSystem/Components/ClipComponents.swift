@@ -32,8 +32,6 @@ struct ClipTypeIcon: View {
 }
 
 struct ClipRow: View {
-    @AppStorage("maskSensitiveContent") private var masksSensitiveContent = true
-
     let clip: ClipItem
     var showsActions = true
     var copyAction: () -> Void = { }
@@ -49,7 +47,7 @@ struct ClipRow: View {
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                 }
-                Text(clip.displayContent(maskingSensitiveContent: masksSensitiveContent))
+                Text(clip.displayContent)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -228,7 +226,7 @@ struct FilterBar: View {
     var body: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 9) {
-                ForEach(ClipCategory.allCases) { category in
+                ForEach([ClipCategory.all, .text, .link]) { category in
                     Button {
                         selection = category
                     } label: {

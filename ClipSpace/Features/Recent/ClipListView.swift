@@ -17,6 +17,7 @@ struct ClipListView: View {
     @State private var selectedIDs: Set<ClipItem.ID> = []
     @State private var showsAddClip = false
     @State private var showsDeleteConfirmation = false
+    @State private var showsCopyConfirmation = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -67,7 +68,7 @@ struct ClipListView: View {
                         title: mode == .pinned ? "No Pinned Clips" : "No Clips",
                         message: mode == .pinned
                             ? "Pin a clip to keep it close at hand."
-                            : "Copied items matching your search will appear here.",
+                            : "Save a text or link clip to see it here.",
                         symbol: mode == .pinned ? "pin" : "clipboard"
                     )
                 }
@@ -86,6 +87,25 @@ struct ClipListView: View {
             }
         }
         .background(ClipSpaceStyle.page)
+        .sensoryFeedback(.success, trigger: model.copyFeedbackCount)
+        .overlay(alignment: .top) {
+            if showsCopyConfirmation {
+                Label("Copied", systemImage: "checkmark")
+                    .font(.callout.weight(.semibold))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(.regularMaterial, in: Capsule())
+                    .accessibilityIdentifier("copyConfirmation")
+                    .transition(.opacity)
+            }
+        }
+        .onChange(of: model.copyFeedbackCount) {
+            showsCopyConfirmation = true
+            Task {
+                try? await Task.sleep(for: .seconds(1.2))
+                showsCopyConfirmation = false
+            }
+        }
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 if horizontalSizeClass == .compact {
@@ -107,6 +127,7 @@ struct ClipListView: View {
                         Button("Add Clip", systemImage: "plus") {
                             showsAddClip = true
                         }
+                        .accessibilityIdentifier("addClipButton")
                     }
                 }
             }
@@ -322,6 +343,7 @@ private struct ClipNavigationRow: View {
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("clipRow_\(clip.title)")
             .simultaneousGesture(TapGesture().onEnded { selection = clip })
             .contextMenu {
                 Button("Copy", systemImage: "doc.on.doc") {
@@ -419,6 +441,9 @@ private struct AddClipView: View {
     init(model: ClipLibraryViewModel, startsPinned: Bool) {
         self.model = model
         _isPinned = State(initialValue: startsPinned)
+        _isSensitive = State(
+            initialValue: ProcessInfo.processInfo.arguments.contains("--ui-testing-sensitive-clip")
+        )
     }
 
     var body: some View {
@@ -426,13 +451,15 @@ private struct AddClipView: View {
             Form {
                 Section("Clip") {
                     Picker("Type", selection: $kind) {
-                        ForEach(ClipKind.allCases, id: \.self) { kind in
+                        ForEach([ClipKind.text, .link], id: \.self) { kind in
                             Label(kind.rawValue, systemImage: kind.symbolName)
                                 .tag(kind)
                         }
                     }
                     TextField("Title", text: $title)
+                        .accessibilityIdentifier("clipTitleField")
                     TextField("Paste or type content", text: $content, axis: .vertical)
+                        .accessibilityIdentifier("clipContentField")
                         .lineLimit(5...10)
                 }
 
@@ -447,6 +474,7 @@ private struct AddClipView: View {
                 Section("Options") {
                     Toggle("Pin Clip", systemImage: "pin", isOn: $isPinned)
                     Toggle("Sensitive Content", systemImage: "eye.slash", isOn: $isSensitive)
+                        .accessibilityIdentifier("sensitiveContentToggle")
                 }
             }
             .navigationTitle("Add Clip")
@@ -473,6 +501,7 @@ private struct AddClipView: View {
                                 .accessibilityLabel("Adding Clip")
                         } else {
                             Text("Add")
+                                .accessibilityIdentifier("saveClipButton")
                         }
                     }
                     .disabled(!canSave || isSaving)

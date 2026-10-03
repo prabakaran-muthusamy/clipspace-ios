@@ -11,18 +11,26 @@ struct ClipDetailView: View {
     let clip: ClipItem
     let copyAction: () -> Void
     let pinAction: () async -> Void
+    let deleteAction: () async -> Void
     @State private var revealsSensitiveContent = false
+    @State private var showsDeleteConfirmation = false
+    @State private var copyFeedbackCount = 0
+    @State private var showsCopyConfirmation = false
     @Environment(\.openURL) private var openURL
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                ClipDetailHeader(clip: clip)
+                ClipDetailHeader(clip: clip, revealsSensitiveContent: $revealsSensitiveContent)
                 ClipDetailActions(
                     clip: clip,
-                    copyAction: copyAction,
+                    copyAction: {
+                        copyAction()
+                        copyFeedbackCount += 1
+                    },
                     openAction: openClip,
-                    pinAction: pinAction
+                    pinAction: pinAction,
+                    deleteAction: { showsDeleteConfirmation = true }
                 )
                 ClipPreviewCard(clip: clip, revealsSensitiveContent: $revealsSensitiveContent)
                 ClipDetailsCard(clip: clip)
@@ -33,25 +41,45 @@ struct ClipDetailView: View {
         }
         .background(ClipSpaceStyle.page)
         .navigationTitle("Clip Detail")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .tabBar)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("More", systemImage: "ellipsis.circle") { }
+        .sensoryFeedback(.success, trigger: copyFeedbackCount)
+        .overlay(alignment: .top) {
+            if showsCopyConfirmation {
+                Label("Copied", systemImage: "checkmark")
+                    .font(.callout.weight(.semibold))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(.regularMaterial, in: Capsule())
+                    .accessibilityIdentifier("copyConfirmation")
             }
         }
-    }
+        .onChange(of: copyFeedbackCount) {
+            showsCopyConfirmation = true
+            Task {
+                try? await Task.sleep(for: .seconds(1.2))
+                showsCopyConfirmation = false
+            }
+        }
+        .confirmationDialog("Delete this clip?", isPresented: $showsDeleteConfirmation) {
+            Button("Delete Clip", role: .destructive) {
+                Task { await deleteAction() }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This action cannot be undone.")
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
+     }
 
     private func openClip() {
-        guard let url = URL(string: clip.content) else { return }
+        guard let url = clip.webURL else { return }
         openURL(url)
     }
 }
 
 private struct ClipDetailHeader: View {
-    @AppStorage("maskSensitiveContent") private var masksSensitiveContent = true
-
     let clip: ClipItem
+    @Binding var revealsSensitiveContent: Bool
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
@@ -60,7 +88,7 @@ private struct ClipDetailHeader: View {
                 Text(clip.title)
                     .font(.title3.weight(.semibold))
                     .lineLimit(2)
-                Text(clip.displayContent(maskingSensitiveContent: masksSensitiveContent))
+                Text(clip.displayContent(maskingSensitiveContent: !revealsSensitiveContent))
                     .font(.subheadline)
                     .foregroundStyle(ClipSpaceStyle.blue)
                     .lineLimit(2)
@@ -77,11 +105,13 @@ private struct ClipDetailActions: View {
     let copyAction: () -> Void
     let openAction: () -> Void
     let pinAction: () async -> Void
+    let deleteAction: () -> Void
 
     var body: some View {
-        HStack(spacing: 10) {
+        ScrollView(.horizontal) {
+            HStack(spacing: 10) {
             DetailActionButton(title: "Copy", symbol: "doc.on.doc", action: copyAction)
-            if clip.kind == .link {
+            if clip.webURL != nil {
                 DetailActionButton(title: "Open", symbol: "safari", action: openAction)
             }
             ShareLink(item: clip.content) {
@@ -94,7 +124,11 @@ private struct ClipDetailActions: View {
                 DetailActionLabel(title: clip.isPinned ? "Unpin" : "Pin", symbol: clip.isPinned ? "pin.slash" : "pin")
             }
             .buttonStyle(.plain)
+                DetailActionButton(title: "Delete", symbol: "trash", action: deleteAction)
+                    .accessibilityIdentifier("deleteClipButton")
+            }
         }
+        .scrollIndicators(.hidden)
     }
 }
 
@@ -142,6 +176,7 @@ private struct ClipPreviewCard: View {
                     } label: {
                         Label("Reveal sensitive content", systemImage: "eye")
                             .frame(maxWidth: .infinity, minHeight: 110)
+                            .accessibilityIdentifier("revealSensitiveContentButton")
                     }
                 } else if clip.kind == .image {
                     Image(systemName: "photo.on.rectangle.angled")

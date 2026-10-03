@@ -48,18 +48,7 @@ struct SettingsView: View {
                     Label("Siri & Shortcuts", systemImage: "sparkles")
                 }
 
-                NavigationLink {
-                    KeyboardSettingsView()
-                } label: {
-                    Label("Keyboard Extension", systemImage: "keyboard")
-                }
-
-                NavigationLink {
-                    WidgetsSettingsView()
-                } label: {
-                    Label("Widgets & Controls", systemImage: "square.grid.2x2")
-                }
-            }
+             }
 
             Section("Privacy & Security") {
                 NavigationLink {
@@ -215,12 +204,9 @@ private struct HistoryLimitSettingsView: View {
 
 private struct SensitiveContentSettingsView: View {
     let syncModel: DeviceSyncViewModel
-    @AppStorage("maskSensitiveContent") private var masksSensitiveContent = true
-
     var body: some View {
         Form {
             Section {
-                Toggle("Mask Sensitive Content", systemImage: "eye.slash", isOn: $masksSensitiveContent)
                 Toggle(
                     "Sync Sensitive Content",
                     systemImage: "lock.icloud",
@@ -231,7 +217,7 @@ private struct SensitiveContentSettingsView: View {
                 )
                 .disabled(!syncModel.isConsentGranted)
             } footer: {
-                Text("Sensitive clips are masked in lists by default. Cloud sync for sensitive clips is separately disabled by default.")
+                Text("Sensitive clips remain masked in lists and require Reveal in clip details. Cloud sync for sensitive clips is separately disabled by default.")
             }
         }
         .navigationTitle("Sensitive Content")
@@ -285,11 +271,10 @@ private struct SiriShortcutsSettingsView: View {
         List {
             Section {
                 Label("Open ClipSpace", systemImage: "rectangle.stack")
-                Label("Show Recent Clips", systemImage: "clock")
-            } header: {
+             } header: {
                 Text("Available Actions")
             } footer: {
-                Text("These actions are available in Siri, Spotlight, the Action button, and the Shortcuts app.")
+                Text("This action is available in Siri, Spotlight, and the Shortcuts app.")
             }
 
             Section {
@@ -348,7 +333,9 @@ private struct ExternalSettingsLink: View {
 
     var body: some View {
         Button {
-            guard let url = URL(string: urlString) else { return }
+            guard let url = URL(string: urlString),
+                  let scheme = url.scheme?.lowercased(),
+                  ["http", "https"].contains(scheme) else { return }
             openURL(url)
         } label: {
             HStack {

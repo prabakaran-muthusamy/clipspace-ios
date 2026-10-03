@@ -44,7 +44,7 @@ private struct OnboardingHero: View {
             Text("ClipSpace")
                 .font(.largeTitle.bold())
             
-            Text("Your clipboard everywhere.")
+            Text("Your private clipboard library.")
                 .font(.headline)
                 .foregroundStyle(.secondary)
         }
@@ -54,10 +54,10 @@ private struct OnboardingHero: View {
 private struct OnboardingFeatures: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
-            OnboardingFeature(symbol: "laptopcomputer.and.iphone", title: "Access across all your devices")
-            OnboardingFeature(symbol: "sparkles", title: "Smart suggestions")
-            OnboardingFeature(symbol: "lock.shield", title: "Secure and private")
-            OnboardingFeature(symbol: "waveform", title: "Works with Shortcuts, Siri and more")
+            OnboardingFeature(symbol: "square.and.arrow.down", title: "Save text and links you choose")
+            OnboardingFeature(symbol: "magnifyingglass", title: "Search, copy, and pin saved clips")
+            OnboardingFeature(symbol: "eye.slash", title: "Mask clips you mark as sensitive")
+            OnboardingFeature(symbol: "icloud", title: "Optionally sync with your private iCloud database")
         }
         .frame(maxWidth: 440)
     }

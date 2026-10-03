@@ -46,11 +46,20 @@ struct ContentView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     init(
-        repository: any ClipRepository = LocalClipRepository(),
+        repository: (any ClipRepository)? = nil,
         clipboard: any ClipboardWriting = SystemClipboardWriter()
     ) {
-        _model = State(initialValue: ClipLibraryViewModel(repository: repository, clipboard: clipboard))
-        _syncModel = State(initialValue: DeviceSyncViewModel(repository: repository))
+        let resolvedRepository = repository ?? Self.defaultRepository
+        _model = State(initialValue: ClipLibraryViewModel(repository: resolvedRepository, clipboard: clipboard))
+        _syncModel = State(initialValue: DeviceSyncViewModel(repository: resolvedRepository))
+    }
+
+    private static var defaultRepository: any ClipRepository {
+        if ProcessInfo.processInfo.arguments.contains("--ui-testing") {
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("ClipSpaceUITests.json")
+            return LocalClipRepository(fileURL: url)
+        }
+        return LocalClipRepository()
     }
 
     var body: some View {
@@ -83,7 +92,7 @@ struct ContentView: View {
         TabView(selection: $compactTab) {
             Tab("Recent", systemImage: "clock", value: .recent) {
                 NavigationStack {
-                    ClipListView(model: model, clips: model.recentClips, showsSuggestions: true, selection: $selectedClip)
+                    ClipListView(model: model, clips: model.recentClips, showsSuggestions: false, selection: $selectedClip)
                         .navigationTitle("ClipSpace")
                         .navigationBarTitleDisplayMode(.large)
                         .navigationDestination(for: ClipItem.self) { clip in
@@ -124,15 +133,12 @@ struct ContentView: View {
         NavigationSplitView {
             List {
                 Section {
-                    sidebarRow(.suggestions)
                     sidebarRow(.recent)
                     sidebarRow(.pinned)
                 }
                 Section("Types") {
                     sidebarRow(.text)
                     sidebarRow(.links)
-                    sidebarRow(.images)
-                    sidebarRow(.files)
                 }
                 Section {
                     sidebarRow(.devices)
@@ -165,7 +171,7 @@ struct ContentView: View {
             ClipListView(
                 model: model,
                 clips: clips(for: destination),
-                showsSuggestions: destination == .recent || destination == .suggestions,
+                showsSuggestions: false,
                 selection: $selectedClip,
                 mode: destination == .pinned ? .pinned : .library
             )
@@ -210,10 +216,14 @@ struct ContentView: View {
             model.copy(clip)
         }, pinAction: {
             await model.togglePin(clip)
+        }, deleteAction: {
+            await model.delete(clip)
+            selectedClip = nil
         })
     }
 
     private func synchronizeIfEnabled() async {
+        guard !ProcessInfo.processInfo.arguments.contains("--ui-testing") else { return }
         await syncModel.refresh()
         guard syncModel.isConsentGranted,
               syncModel.accountAvailability == .available,

@@ -139,7 +139,9 @@ final class CloudSyncService {
         let cloudClips = activeCloudRecords.compactMap { try? decodeClip(from: $0) }
             .filter { includesSensitiveContent || !$0.isSensitive }
         var merged = Dictionary(uniqueKeysWithValues: cloudClips.map { ($0.id, $0) })
-        for clip in eligibleLocalClips {
+        let cloudIDs = Set(cloudClips.map(\.id))
+        let remotelyDeletedIDs = previouslySyncedClipIDs.subtracting(cloudIDs)
+        for clip in eligibleLocalClips where !remotelyDeletedIDs.contains(clip.id) {
             if let cloudClip = merged[clip.id], cloudClip.updatedAt > clip.updatedAt {
                 continue
             }

@@ -16,15 +16,22 @@ final class ClipLibraryViewModel {
     var query = ""
     var category: ClipCategory = .all
     var errorMessage: String?
+    private(set) var copyFeedbackCount = 0
 
     private let repository: any ClipRepository
     private let clipboard: any ClipboardWriting
+    private let defaults: UserDefaults
     private let loadClips: LoadClipsUseCase
     private let filterClips = FilterClipsUseCase()
 
-    init(repository: any ClipRepository, clipboard: any ClipboardWriting) {
+    init(
+        repository: any ClipRepository,
+        clipboard: any ClipboardWriting,
+        defaults: UserDefaults = .standard
+    ) {
         self.repository = repository
         self.clipboard = clipboard
+        self.defaults = defaults
         self.loadClips = LoadClipsUseCase(repository: repository)
     }
 
@@ -56,6 +63,7 @@ final class ClipLibraryViewModel {
 
     func copy(_ clip: ClipItem) {
         clipboard.copy(clip.content)
+        copyFeedbackCount += 1
     }
 
     func addClip(
@@ -67,7 +75,7 @@ final class ClipLibraryViewModel {
         isSensitive: Bool
     ) async -> Bool {
         let excludedApps = Set(
-            (UserDefaults.standard.string(forKey: "excludedSourceApps") ?? "")
+            (defaults.string(forKey: "excludedSourceApps") ?? "")
                 .split(separator: "|")
                 .map(String.init)
         )
@@ -162,10 +170,10 @@ final class ClipLibraryViewModel {
     }
 
     private var configuredHistoryLimit: Int? {
-        guard UserDefaults.standard.object(forKey: "clipHistoryLimit") != nil else {
+        guard defaults.object(forKey: "clipHistoryLimit") != nil else {
             return 1_000
         }
-        let value = UserDefaults.standard.integer(forKey: "clipHistoryLimit")
+        let value = defaults.integer(forKey: "clipHistoryLimit")
         return value == 0 ? nil : value
     }
 }

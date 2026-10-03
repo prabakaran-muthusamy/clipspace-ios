@@ -142,6 +142,16 @@ struct ClipItem: Identifiable, Hashable, Codable, Sendable {
     var searchableText: String {
         [title, content, sourceDevice].joined(separator: " ").localizedLowercase
     }
+
+    var webURL: URL? {
+        guard kind == .link,
+              let components = URLComponents(string: content.trimmingCharacters(in: .whitespacesAndNewlines)),
+              let scheme = components.scheme?.lowercased(),
+              ["http", "https"].contains(scheme),
+              let host = components.host,
+              !host.isEmpty else { return nil }
+        return components.url
+    }
 }
 
 enum DeviceKind: String, Codable, Sendable {

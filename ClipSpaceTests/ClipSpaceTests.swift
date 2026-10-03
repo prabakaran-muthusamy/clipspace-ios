@@ -9,6 +9,12 @@ import Foundation
 import Testing
 @testable import ClipSpace
 
+private struct TestClipboardWriter: ClipboardWriting {
+    @MainActor
+    func copy(_ value: String) { }
+}
+
+@MainActor
 struct ClipSpaceTests {
     private let filter = FilterClipsUseCase()
 
@@ -94,6 +100,87 @@ struct ClipSpaceTests {
 
         let clips = try await repository.fetchClips()
         #expect(clips.map(\.title) == ["Pinned"])
+    }
+
+    @Test func repositoryAddsPinsAndDeletesClip() async throws {
+        let repository = LocalClipRepository(fileURL: temporaryStoreURL())
+        let clip = makeClip(title: "Saved", content: "Value", device: "iPhone", kind: .text)
+
+        try await repository.addClip(clip)
+        #expect(try await repository.fetchClips().map(\.id) == [clip.id])
+
+        try await repository.setPinned(true, for: clip.id)
+        #expect(try await repository.fetchClips().first?.isPinned == true)
+
+        try await repository.deleteClip(id: clip.id)
+        #expect(try await repository.fetchClips().isEmpty)
+    }
+
+    @Test func malformedPersistenceDataThrowsWithoutOverwritingFile() async throws {
+        let url = temporaryStoreURL()
+        let malformed = Data("not-json".utf8)
+        try malformed.write(to: url, options: .atomic)
+        let repository = LocalClipRepository(fileURL: url)
+
+        await #expect(throws: DecodingError.self) {
+            _ = try await repository.fetchClips()
+        }
+        #expect(try Data(contentsOf: url) == malformed)
+    }
+
+    @Test func linkValidationAllowsOnlyHTTPAndHTTPSWithHosts() {
+        let https = makeClip(title: "Web", content: "https://example.com/path", device: "iPhone", kind: .link)
+        let customScheme = makeClip(title: "Unsafe", content: "shortcuts://run-shortcut", device: "iPhone", kind: .link)
+        let malformed = makeClip(title: "Malformed", content: "https://", device: "iPhone", kind: .link)
+
+        #expect(https.webURL?.host == "example.com")
+        #expect(customScheme.webURL == nil)
+        #expect(malformed.webURL == nil)
+    }
+
+    @Test func excludedSourcePreventsSaving() async {
+        let suiteName = "ClipSpaceTests.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suiteName) else {
+            Issue.record("Could not create isolated defaults")
+            return
+        }
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(ClipSourceApp.safari.rawValue, forKey: "excludedSourceApps")
+
+        let repository = MockClipRepository()
+        let model = ClipLibraryViewModel(
+            repository: repository,
+            clipboard: TestClipboardWriter(),
+            defaults: defaults
+        )
+
+        let didSave = await model.addClip(
+            title: "Blocked",
+            content: "https://example.com",
+            kind: .link,
+            sourceApp: .safari,
+            isPinned: false,
+            isSensitive: false
+        )
+
+        #expect(!didSave)
+        #expect(model.errorMessage == "Safari is excluded in Settings.")
+    }
+
+    @Test func sensitiveSyncPreferencePersists() {
+        let suiteName = "ClipSpaceTests.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suiteName) else {
+            Issue.record("Could not create isolated defaults")
+            return
+        }
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let repository = MockClipRepository()
+        let model = DeviceSyncViewModel(repository: repository, defaults: defaults)
+
+        model.setIncludesSensitiveContent(true)
+
+        let restored = DeviceSyncViewModel(repository: repository, defaults: defaults)
+        #expect(restored.includesSensitiveContent)
     }
 
     private func makeClip(
