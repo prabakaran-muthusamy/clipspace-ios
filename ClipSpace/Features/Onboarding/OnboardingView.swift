@@ -9,7 +9,7 @@ import SwiftUI
 
 struct OnboardingView: View {
     let completion: () -> Void
-
+    
     var body: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 36)
@@ -21,32 +21,29 @@ struct OnboardingView: View {
         }
         .padding(.horizontal, 28)
         .padding(.bottom, 18)
-        .background(
-            LinearGradient(
-                colors: [Color.indigo.opacity(0.10), Color(uiColor: .systemBackground), Color.blue.opacity(0.05)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-        )
+        .background(LinearGradient(colors: [Color.indigo.opacity(0.10),
+                                            Color(uiColor: .systemBackground),
+                                            Color.blue.opacity(0.05)],
+                                   startPoint: .topLeading,
+                                   endPoint: .bottomTrailing)
+            .ignoresSafeArea())
     }
 }
 
 private struct OnboardingHero: View {
     var body: some View {
         VStack(spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(LinearGradient(colors: [.blue, .indigo], startPoint: .topLeading, endPoint: .bottomTrailing))
-                Image(systemName: "square.3.layers.3d.top.filled")
-                    .font(.system(size: 48, weight: .semibold))
-                    .foregroundStyle(.white)
-            }
-            .frame(width: 94, height: 94)
-            .shadow(color: .blue.opacity(0.25), radius: 16, y: 8)
-
+            Image("AppIcon")
+                .resizable()
+                .interpolation(.high)
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .shadow(color: .blue.opacity(0.25), radius: 16, y: 8)
+            
             Text("ClipSpace")
                 .font(.largeTitle.bold())
+            
             Text("Your clipboard everywhere.")
                 .font(.headline)
                 .foregroundStyle(.secondary)
@@ -69,7 +66,7 @@ private struct OnboardingFeatures: View {
 private struct OnboardingFeature: View {
     let symbol: String
     let title: LocalizedStringKey
-
+    
     var body: some View {
         Label {
             Text(title).font(.body.weight(.medium))
@@ -83,7 +80,7 @@ private struct OnboardingFeature: View {
 
 private struct OnboardingActions: View {
     let completion: () -> Void
-
+    
     var body: some View {
         VStack(spacing: 10) {
             Button("Get Started", action: completion)
@@ -91,14 +88,6 @@ private struct OnboardingActions: View {
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity, minHeight: 50)
                 .background(ClipSpaceStyle.blue, in: Capsule())
-            Button(action: completion) {
-                Label("Sign In with Apple", systemImage: "apple.logo")
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity, minHeight: 50)
-                    .background(Color(uiColor: .secondarySystemBackground), in: Capsule())
-            }
-            .buttonStyle(.plain)
         }
         .frame(maxWidth: 500)
     }

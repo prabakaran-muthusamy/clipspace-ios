@@ -1,3 +1,10 @@
+//
+//  OpenClipSpaceIntent.swift
+//  ClipSpace
+//
+//  Created by Prabakaran Muthusamy on 03/10/26.
+//
+
 import AppIntents
 
 struct OpenClipSpaceIntent: AppIntent {

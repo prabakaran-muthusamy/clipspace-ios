@@ -46,13 +46,64 @@ struct ClipSpaceTests {
         #expect(clip.displayContent.contains("secret-value") == false)
     }
 
+    @Test func historyLimitKeepsPinnedAndNewestUnpinnedClips() async throws {
+        let repository = LocalClipRepository(fileURL: temporaryStoreURL())
+        let oldest = makeClip(
+            title: "Oldest",
+            content: "1",
+            device: "iPhone",
+            kind: .text,
+            createdAt: .now.addingTimeInterval(-300)
+        )
+        let newest = makeClip(
+            title: "Newest",
+            content: "2",
+            device: "iPhone",
+            kind: .text,
+            createdAt: .now
+        )
+        let pinned = makeClip(
+            title: "Pinned",
+            content: "3",
+            device: "iPhone",
+            kind: .text,
+            isPinned: true,
+            createdAt: .now.addingTimeInterval(-600)
+        )
+        try await repository.replaceClips([oldest, newest, pinned])
+
+        try await repository.enforceHistoryLimit(2)
+
+        let clips = try await repository.fetchClips()
+        #expect(Set(clips.map(\.title)) == ["Newest", "Pinned"])
+    }
+
+    @Test func clearHistoryCanPreservePinnedClips() async throws {
+        let repository = LocalClipRepository(fileURL: temporaryStoreURL())
+        let regular = makeClip(title: "Regular", content: "1", device: "iPhone", kind: .text)
+        let pinned = makeClip(
+            title: "Pinned",
+            content: "2",
+            device: "iPhone",
+            kind: .text,
+            isPinned: true
+        )
+        try await repository.replaceClips([regular, pinned])
+
+        try await repository.clearClips(keepingPinned: true)
+
+        let clips = try await repository.fetchClips()
+        #expect(clips.map(\.title) == ["Pinned"])
+    }
+
     private func makeClip(
         title: String,
         content: String,
         device: String,
         kind: ClipKind,
         isPinned: Bool = false,
-        isSensitive: Bool = false
+        isSensitive: Bool = false,
+        createdAt: Date = .now
     ) -> ClipItem {
         ClipItem(
             id: UUID(),
@@ -60,12 +111,18 @@ struct ClipSpaceTests {
             content: content,
             kind: kind,
             sourceDevice: device,
-            createdAt: .now,
+            createdAt: createdAt,
             byteCount: content.utf8.count,
             syncState: .local,
             isPinned: isPinned,
             isSensitive: isSensitive,
             isSuggestion: false
         )
+    }
+
+    private func temporaryStoreURL() -> URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("json")
     }
 }

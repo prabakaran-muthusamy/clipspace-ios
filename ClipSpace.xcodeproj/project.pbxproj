@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E1712D3430713950000AAD90 /* ClipSpaceAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1712D3330713950000AAD90 /* ClipSpaceAppIntents.swift */; };
 		E190484A30698D4E002A7752 /* ClipSpaceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E190484830698D4E002A7752 /* ClipSpaceUITests.swift */; };
 		E190484F30698D4E002A7752 /* ClipSpaceApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E190484C30698D4E002A7752 /* ClipSpaceApp.swift */; };
 		E190485030698D4E002A7752 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E190484D30698D4E002A7752 /* ContentView.swift */; };
@@ -23,6 +24,9 @@
 		E19048793069915D002A7752 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E19048783069915D002A7752 /* SettingsView.swift */; };
 		E190487B3069915D002A7752 /* ClipDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E190487A3069915D002A7752 /* ClipDetailView.swift */; };
 		E190487D3069915D002A7752 /* DevicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E190487C3069915D002A7752 /* DevicesView.swift */; };
+		E1F6FD09306FA4F4004C3CBA /* DeviceSyncViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F6FD08306FA4F4004C3CBA /* DeviceSyncViewModel.swift */; };
+		E1F6FD0B306FA4FA004C3CBA /* CloudSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F6FD0A306FA4FA004C3CBA /* CloudSyncService.swift */; };
+		E1F6FD0D307111F0004C3CBA /* LocalClipRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F6FD0C307111F0004C3CBA /* LocalClipRepository.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -43,6 +47,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		E1712D3330713950000AAD90 /* ClipSpaceAppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipSpaceAppIntents.swift; sourceTree = "<group>"; };
 		E190482030698D3B002A7752 /* ClipSpace.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClipSpace.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E190482D30698D3C002A7752 /* ClipSpaceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClipSpaceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E190483730698D3C002A7752 /* ClipSpaceUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClipSpaceUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -62,6 +67,10 @@
 		E19048783069915D002A7752 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		E190487A3069915D002A7752 /* ClipDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipDetailView.swift; sourceTree = "<group>"; };
 		E190487C3069915D002A7752 /* DevicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesView.swift; sourceTree = "<group>"; };
+		E1F6FD06306FA424004C3CBA /* ClipSpace.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClipSpace.entitlements; sourceTree = "<group>"; };
+		E1F6FD08306FA4F4004C3CBA /* DeviceSyncViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSyncViewModel.swift; sourceTree = "<group>"; };
+		E1F6FD0A306FA4FA004C3CBA /* CloudSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncService.swift; sourceTree = "<group>"; };
+		E1F6FD0C307111F0004C3CBA /* LocalClipRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalClipRepository.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,6 +123,7 @@
 		E190484E30698D4E002A7752 /* ClipSpace */ = {
 			isa = PBXGroup;
 			children = (
+				E1F6FD06306FA424004C3CBA /* ClipSpace.entitlements */,
 				E190485730698DCD002A7752 /* App */,
 				E190485830698DD9002A7752 /* Core */,
 				E190485930698DE2002A7752 /* Features */,
@@ -161,12 +171,12 @@
 		E190485930698DE2002A7752 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				E1904867306990FC002A7752 /* Onboarding */,
 				E190485A306990F5002A7752 /* Recent */,
 				E1904863306990FB002A7752 /* Pinned */,
 				E1904864306990FB002A7752 /* ClipDetail */,
 				E1904865306990FB002A7752 /* Devices */,
 				E1904866306990FB002A7752 /* Settings */,
-				E1904867306990FC002A7752 /* Onboarding */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -201,6 +211,7 @@
 			isa = PBXGroup;
 			children = (
 				E190486A306990FF002A7752 /* Repositories */,
+				E1F6FD07306FA4F4004C3CBA /* Cloud 2 */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -232,6 +243,7 @@
 			isa = PBXGroup;
 			children = (
 				E190487C3069915D002A7752 /* DevicesView.swift */,
+				E1F6FD08306FA4F4004C3CBA /* DeviceSyncViewModel.swift */,
 			);
 			path = Devices;
 			sourceTree = "<group>";
@@ -240,6 +252,7 @@
 			isa = PBXGroup;
 			children = (
 				E19048783069915D002A7752 /* SettingsView.swift */,
+				E1712D3330713950000AAD90 /* ClipSpaceAppIntents.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -272,6 +285,8 @@
 			isa = PBXGroup;
 			children = (
 				E190486E30699114002A7752 /* MockClipRepository.swift */,
+				E1F6FD0A306FA4FA004C3CBA /* CloudSyncService.swift */,
+				E1F6FD0C307111F0004C3CBA /* LocalClipRepository.swift */,
 			);
 			path = Repositories;
 			sourceTree = "<group>";
@@ -282,6 +297,13 @@
 				E19048743069915C002A7752 /* ClipComponents.swift */,
 			);
 			path = Components;
+			sourceTree = "<group>";
+		};
+		E1F6FD07306FA4F4004C3CBA /* Cloud 2 */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "Cloud 2";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -406,10 +428,14 @@
 			isa = PBXSourcesBuildPhase;
 			files = (
 				E190485C306990F5002A7752 /* ClipLibraryViewModel.swift in Sources */,
+				E1F6FD09306FA4F4004C3CBA /* DeviceSyncViewModel.swift in Sources */,
 				E190487130699114002A7752 /* ClipUseCases.swift in Sources */,
 				E190484F30698D4E002A7752 /* ClipSpaceApp.swift in Sources */,
 				E190487D3069915D002A7752 /* DevicesView.swift in Sources */,
 				E19048773069915C002A7752 /* OnboardingView.swift in Sources */,
+				E1F6FD0B306FA4FA004C3CBA /* CloudSyncService.swift in Sources */,
+				E1F6FD0D307111F0004C3CBA /* LocalClipRepository.swift in Sources */,
+				E1712D3430713950000AAD90 /* ClipSpaceAppIntents.swift in Sources */,
 				E190485030698D4E002A7752 /* ContentView.swift in Sources */,
 				E190487B3069915D002A7752 /* ClipDetailView.swift in Sources */,
 				E19048733069915C002A7752 /* ClipListView.swift in Sources */,
@@ -574,6 +600,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ClipSpace/ClipSpace.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = VC97QK9RK9;
@@ -609,6 +636,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ClipSpace/ClipSpace.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = VC97QK9RK9;

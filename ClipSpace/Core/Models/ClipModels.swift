@@ -27,9 +27,9 @@ enum DateFormatterHelper {
 
 enum ClipKind: String, CaseIterable, Codable, Sendable {
     case text = "Text"
-    case link = "Links"
-    case image = "Images"
-    case file = "Files"
+    case link = "Link"
+    case image = "Image"
+    case file = "File"
 
     var symbolName: String {
         switch self {
@@ -72,13 +72,15 @@ enum SyncState: String, Codable, Sendable {
     case pending = "Waiting to sync"
 }
 
-enum ClipSourceApp: String, Codable, Sendable {
+enum ClipSourceApp: String, CaseIterable, Codable, Identifiable, Sendable {
     case safari = "Safari"
     case notes = "Notes"
     case xcode = "Xcode"
     case photos = "Photos"
     case files = "Files"
     case unknown = "App"
+
+    var id: Self { self }
 
     var symbolName: String {
         switch self {
@@ -122,6 +124,7 @@ struct ClipItem: Identifiable, Hashable, Codable, Sendable {
     var sourceDevice: String
     var sourceApp: ClipSourceApp = .unknown
     var createdAt: Date
+    var updatedAt: Date = .now
     var byteCount: Int
     var syncState: SyncState
     var isPinned: Bool
@@ -132,12 +135,16 @@ struct ClipItem: Identifiable, Hashable, Codable, Sendable {
         isSensitive ? "••••••••••••••••" : content
     }
 
+    func displayContent(maskingSensitiveContent: Bool) -> String {
+        isSensitive && maskingSensitiveContent ? "••••••••••••••••" : content
+    }
+
     var searchableText: String {
         [title, content, sourceDevice].joined(separator: " ").localizedLowercase
     }
 }
 
-enum DeviceKind: String, Sendable {
+enum DeviceKind: String, Codable, Sendable {
     case mac = "Mac"
     case phone = "iPhone"
     case tablet = "iPad"
@@ -157,6 +164,8 @@ struct ClipDevice: Identifiable, Hashable, Sendable {
     let kind: DeviceKind
     let lastActive: Date
     let syncState: SyncState
+    let isCurrentDevice: Bool
+    var isSyncEnabled: Bool
 }
 
 enum AppearancePreference: String, CaseIterable, Identifiable {

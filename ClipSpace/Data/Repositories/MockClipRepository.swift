@@ -15,13 +15,34 @@ actor MockClipRepository: ClipRepository {
         clips
     }
 
+    func addClip(_ clip: ClipItem) async throws {
+        clips.append(clip)
+    }
+
     func setPinned(_ isPinned: Bool, for id: UUID) async throws {
         guard let index = clips.firstIndex(where: { $0.id == id }) else { return }
         clips[index].isPinned = isPinned
+        clips[index].updatedAt = .now
     }
 
     func deleteClip(id: UUID) async throws {
         clips.removeAll { $0.id == id }
+    }
+
+    func replaceClips(_ clips: [ClipItem]) async throws {
+        self.clips = clips
+    }
+
+    func clearClips(keepingPinned: Bool) async throws {
+        clips = keepingPinned ? clips.filter(\.isPinned) : []
+    }
+
+    func enforceHistoryLimit(_ limit: Int?) async throws {
+        guard let limit, limit > 0 else { return }
+        let pinned = clips.filter(\.isPinned)
+        let availableSlots = max(0, limit - pinned.count)
+        clips = (pinned + clips.filter { !$0.isPinned }.prefix(availableSlots))
+            .sorted { $0.createdAt > $1.createdAt }
     }
 
     nonisolated private static let samples: [ClipItem] = [

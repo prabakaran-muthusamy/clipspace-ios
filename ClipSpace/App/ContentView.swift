@@ -37,17 +37,20 @@ private enum AppDestination: String, CaseIterable, Identifiable {
 
 struct ContentView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.scenePhase) private var scenePhase
     @State private var model: ClipLibraryViewModel
+    @State private var syncModel: DeviceSyncViewModel
     @State private var selectedClip: ClipItem?
     @State private var destination: AppDestination = .recent
     @State private var compactTab = AppDestination.recent
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     init(
-        repository: any ClipRepository = MockClipRepository(),
+        repository: any ClipRepository = LocalClipRepository(),
         clipboard: any ClipboardWriting = SystemClipboardWriter()
     ) {
         _model = State(initialValue: ClipLibraryViewModel(repository: repository, clipboard: clipboard))
+        _syncModel = State(initialValue: DeviceSyncViewModel(repository: repository))
     }
 
     var body: some View {
@@ -68,6 +71,11 @@ struct ContentView: View {
             if model.clips.isEmpty {
                 await model.load()
             }
+            await synchronizeIfEnabled()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            Task { await synchronizeIfEnabled() }
         }
     }
 
@@ -85,7 +93,13 @@ struct ContentView: View {
             }
             Tab("Pinned", systemImage: "pin", value: .pinned) {
                 NavigationStack {
-                    ClipListView(model: model, clips: model.pinnedClips, showsSuggestions: false, selection: $selectedClip)
+                    ClipListView(
+                        model: model,
+                        clips: model.pinnedClips,
+                        showsSuggestions: false,
+                        selection: $selectedClip,
+                        mode: .pinned
+                    )
                         .navigationTitle("Pinned")
                         .navigationBarTitleDisplayMode(.large)
                         .navigationDestination(for: ClipItem.self) { clip in
@@ -94,10 +108,14 @@ struct ContentView: View {
                 }
             }
             Tab("Devices", systemImage: "laptopcomputer.and.iphone", value: .devices) {
-                NavigationStack { DevicesView() }
+                NavigationStack {
+                    DevicesView(model: syncModel, clipsDidChange: model.load)
+                }
             }
             Tab("Settings", systemImage: "gear", value: .settings) {
-                NavigationStack { SettingsView() }
+                NavigationStack {
+                    SettingsView(syncModel: syncModel, libraryModel: model)
+                }
             }
         }
     }
@@ -140,15 +158,16 @@ struct ContentView: View {
     private var contentColumn: some View {
         switch destination {
         case .devices:
-            DevicesView()
+            DevicesView(model: syncModel, clipsDidChange: model.load)
         case .settings:
-            SettingsView()
+            SettingsView(syncModel: syncModel, libraryModel: model)
         default:
             ClipListView(
                 model: model,
                 clips: clips(for: destination),
                 showsSuggestions: destination == .recent || destination == .suggestions,
-                selection: $selectedClip
+                selection: $selectedClip,
+                mode: destination == .pinned ? .pinned : .library
             )
             .navigationTitle(destination.rawValue)
         }
@@ -192,6 +211,15 @@ struct ContentView: View {
         }, pinAction: {
             await model.togglePin(clip)
         })
+    }
+
+    private func synchronizeIfEnabled() async {
+        await syncModel.refresh()
+        guard syncModel.isConsentGranted,
+              syncModel.accountAvailability == .available,
+              !syncModel.isSyncing else { return }
+        await syncModel.synchronize()
+        await model.load()
     }
 }
 

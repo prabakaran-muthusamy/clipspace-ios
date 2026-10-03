@@ -32,9 +32,12 @@ struct ClipTypeIcon: View {
 }
 
 struct ClipRow: View {
+    @AppStorage("maskSensitiveContent") private var masksSensitiveContent = true
+
     let clip: ClipItem
-    let copyAction: () -> Void
-    let pinAction: () -> Void
+    var showsActions = true
+    var copyAction: () -> Void = { }
+    var pinAction: () -> Void = { }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -45,14 +48,8 @@ struct ClipRow: View {
                         .font(.body.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
-                    if clip.isPinned {
-                        Image(systemName: "pin.fill")
-                            .font(.caption2)
-                            .foregroundStyle(.orange)
-                            .accessibilityLabel("Pinned")
-                    }
                 }
-                Text(clip.displayContent)
+                Text(clip.displayContent(maskingSensitiveContent: masksSensitiveContent))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -64,14 +61,16 @@ struct ClipRow: View {
                 )
             }
             Spacer(minLength: 4)
-            VStack(spacing: 6) {
-                ClipRowActionButton(title: "Copy", symbol: "doc.on.doc", tint: ClipSpaceStyle.blue, action: copyAction)
-                ClipRowActionButton(
-                    title: clip.isPinned ? "Unpin" : "Pin",
-                    symbol: clip.isPinned ? "pin.slash" : "pin",
-                    tint: .orange,
-                    action: pinAction
-                )
+            if showsActions {
+                VStack(spacing: 6) {
+                    ClipRowActionButton(title: "Copy", symbol: "doc.on.doc", tint: ClipSpaceStyle.blue, action: copyAction)
+                    ClipRowActionButton(
+                        title: clip.isPinned ? "Unpin" : "Pin",
+                        symbol: clip.isPinned ? "pin.slash" : "pin",
+                        tint: .orange,
+                        action: pinAction
+                    )
+                }
             }
         }
         .padding(.vertical, 11)
@@ -202,7 +201,7 @@ struct ClipSearchField: View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
-            TextField("Search or ask ClipSpace", text: $text)
+            TextField("Search your clips", text: $text)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .submitLabel(.search)

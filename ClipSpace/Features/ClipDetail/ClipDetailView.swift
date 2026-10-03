@@ -49,6 +49,8 @@ struct ClipDetailView: View {
 }
 
 private struct ClipDetailHeader: View {
+    @AppStorage("maskSensitiveContent") private var masksSensitiveContent = true
+
     let clip: ClipItem
 
     var body: some View {
@@ -58,7 +60,7 @@ private struct ClipDetailHeader: View {
                 Text(clip.title)
                     .font(.title3.weight(.semibold))
                     .lineLimit(2)
-                Text(clip.displayContent)
+                Text(clip.displayContent(maskingSensitiveContent: masksSensitiveContent))
                     .font(.subheadline)
                     .foregroundStyle(ClipSpaceStyle.blue)
                     .lineLimit(2)
